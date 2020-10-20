@@ -1,0 +1,3 @@
+[submodule "part0-1/anecdotes"]
+	path = part0-1/anecdotes
+	url = https://github.com/Paoleski/fullstackopen
