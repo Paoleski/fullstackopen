@@ -1,7 +1,7 @@
 import React from 'react';
 
-const AddPerson = ({
-  handlePerson,
+const PersonInput = ({
+  addPerson,
   newName,
   handleNameChange,
   newNumber,
@@ -9,7 +9,7 @@ const AddPerson = ({
 }) => {
   return (
     <div>
-      <form onSubmit={handlePerson}>
+      <form onSubmit={addPerson}>
         <div>
           {' '}
           name: <input value={newName} onChange={handleNameChange} />{' '}
@@ -26,4 +26,4 @@ const AddPerson = ({
   );
 };
 
-export default AddPerson
+export default PersonInput

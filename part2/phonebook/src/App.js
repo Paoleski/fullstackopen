@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Filter from './components/Filter';
-import AddPerson from './components/AddPerson';
+import PersonInput from './components/PersonInput';
 import Persons from './components/Persons';
-import axios from 'axios';
+import PersonService from './services/Person';
 
 const App = () => {
   const [persons, setPersons] = useState([]);
@@ -13,52 +13,65 @@ const App = () => {
   const [showAll, setShowAll] = useState(true);
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/db')
-      .then(response => {
-        setPersons(response.data.persons)
-      })
-  }, [])
+    PersonService.getAll().then((people) => {
+      setPersons(people);
+    });
+  }, []);
 
-  
-  console.log(persons);
-  
-
-  
-
-
-  const handlePerson = (event) => {
+  const addPerson = (event) => {
     event.preventDefault();
     const personObject = {
       name: newName,
       number: newNumber,
-      id: persons.length + 1,
+      date: new Date(),
     };
-    const nameExists = persons.some((person) => person.name === newName);
-    if (nameExists === true) {
-      return alert(`${newName} already exists`);
-    }
-    setPersons(persons.concat(personObject));
+
+    const nameExists = persons.find((person) => person.name === newName);
+    const changedObject = { ...nameExists, number: newNumber };
+    nameExists
+      ? window.confirm('Name already exists, do you want to update the number?')
+        ? PersonService.update(
+            changedObject,
+            changedObject.id
+          ).then((updatedPerson) =>
+            setPersons(
+              persons.map((person) =>
+                person.id !== changedObject.id ? person : updatedPerson
+              )
+            )
+          )
+        : alert('keeping it')
+      : PersonService.create(personObject).then((returnedNote) => {
+          setPersons(persons.concat(returnedNote));
+        });
     setNewName('');
     setNewNumber('');
   };
 
   const handleNameChange = (event) => {
-    console.log(event.target.value);
     setNewName(event.target.value);
   };
 
   const handleNumberChange = (event) => {
-    console.log(event.target.value);
     setNewNumber(event.target.value);
   };
 
   const handleFiltering = (event) => {
     setShowAll(false);
-    setNewFilter(event.target.value);
+    setNewFilter(event.target.value.toLocaleLowerCase());
   };
 
-  
+  const removePerson = (id) => {
+    if (window.confirm(`do you really want to delete?`)) {
+      PersonService.remove(id).then((response) => {
+        onPersonDeleted(id);
+      });
+    }
+  };
+
+  const onPersonDeleted = (id) => {
+    setPersons(persons.filter((person) => person.id !== id));
+  };
 
   const whatToShow = showAll
     ? persons
@@ -66,26 +79,22 @@ const App = () => {
         person.name.toLocaleLowerCase().includes(newFilter)
       );
 
-      
-
   return (
     <div>
       <h2>Phonebook</h2>
       <Filter filteredText={newFilter} handleFilter={handleFiltering}></Filter>
       <h2>Add a new</h2>
-      <AddPerson
-        handlePerson={handlePerson}
+      <PersonInput
+        addPerson={addPerson}
         newName={newName}
         newNumber={newNumber}
         handleNameChange={handleNameChange}
         handleNumberChange={handleNumberChange}
-      ></AddPerson>
+      ></PersonInput>
       <h2>Numbers</h2>
-      <Persons whatToShow={whatToShow}></Persons>
+      <Persons whatToShow={whatToShow} removePerson={removePerson}></Persons>
     </div>
   );
 };
-
-
 
 export default App;
